@@ -27,6 +27,7 @@ SELECT
   c.instituicao_id,
   i.nome AS instituicao_nome,
   c.nome AS conta_nome,
+  c.apelido AS conta_apelido,
   c.tipo_conta,
   c.saldo_inicial,
   c.saldo_inicial + COALESCE(mov.saldo_movimentos, 0) AS saldo_atual,
@@ -117,6 +118,35 @@ WHERE fat.saldo_aberto > 0
 
 COMMENT ON VIEW vw_faturas_abertas IS
   'Faturas de cartão com saldo em aberto por competência.';
+
+-- -----------------------------------------------------------------------------
+-- vw_limites_cartao
+-- valor_em_aberto = soma de DESPESA_PARCELADA ativas (sem abater FOLHA_CREDITO).
+-- limite_disponivel = limite_total - valor_em_aberto.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW vw_limites_cartao
+WITH (security_invoker = true) AS
+SELECT
+  ca.id AS cartao_id,
+  ca.usuario_id,
+  ca.nome AS cartao_nome,
+  ca.limite AS limite_total,
+  COALESCE(ab.valor_em_aberto, 0) AS valor_em_aberto,
+  ca.limite - COALESCE(ab.valor_em_aberto, 0) AS limite_disponivel
+FROM cartoes ca
+LEFT JOIN (
+  SELECT
+    m.cartao_id,
+    SUM(m.valor) AS valor_em_aberto
+  FROM movimentacoes m
+  WHERE m.status_movimentacao = 'ATIVA'
+    AND m.tipo_movimento = 'DESPESA_PARCELADA'
+    AND m.cartao_id IS NOT NULL
+  GROUP BY m.cartao_id
+) ab ON ab.cartao_id = ca.id;
+
+COMMENT ON VIEW vw_limites_cartao IS
+  'Limite do cartão, valor em aberto (parceladas ativas, sem FOLHA_CREDITO) e limite disponível.';
 
 -- -----------------------------------------------------------------------------
 -- vw_painel_financeiro

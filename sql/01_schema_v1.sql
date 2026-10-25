@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS instituicoes (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   usuario_id  uuid NOT NULL REFERENCES usuarios (id),
   nome        text NOT NULL,
+  tipo        text NOT NULL,
   ativo       boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
@@ -105,6 +106,8 @@ CREATE TABLE IF NOT EXISTS instituicoes (
 );
 
 COMMENT ON TABLE instituicoes IS 'Instituições financeiras vinculadas ao usuário.';
+COMMENT ON COLUMN instituicoes.tipo IS
+  'Tipo da instituição. Exemplos: BANCO, CORRETORA, CARTEIRA_DIGITAL.';
 
 CREATE INDEX IF NOT EXISTS idx_instituicoes_usuario_id ON instituicoes (usuario_id);
 
@@ -123,15 +126,18 @@ CREATE TABLE IF NOT EXISTS contas (
   usuario_id     uuid NOT NULL REFERENCES usuarios (id),
   instituicao_id uuid REFERENCES instituicoes (id),
   nome           text NOT NULL,
+  apelido        text NOT NULL,
   tipo_conta     tipo_conta NOT NULL,
   saldo_inicial  numeric(14, 2) NOT NULL DEFAULT 0,
   ativo          boolean NOT NULL DEFAULT true,
   created_at     timestamptz NOT NULL DEFAULT now(),
   updated_at     timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT contas_usuario_nome_key UNIQUE (usuario_id, nome)
+  CONSTRAINT contas_usuario_apelido_key UNIQUE (usuario_id, apelido)
 );
 
 COMMENT ON TABLE contas IS 'Contas do usuário. O saldo corrente é derivado nas views.';
+COMMENT ON COLUMN contas.apelido IS
+  'Identificador único da conta para o usuário (como a conta aparece no sistema).';
 COMMENT ON COLUMN contas.saldo_inicial IS 'Saldo de abertura; não é atualizado pelas movimentações.';
 
 CREATE INDEX IF NOT EXISTS idx_contas_usuario_id ON contas (usuario_id);
@@ -145,7 +151,7 @@ EXECUTE FUNCTION set_updated_at();
 
 -- -----------------------------------------------------------------------------
 -- cartoes
--- Cartões de crédito. dia_fechamento / dia_vencimento em dia do mês (1–28).
+-- Cartões de crédito. dia_fechamento / dia_vencimento em dia do mês (1–31).
 -- conta_id: conta usada preferencialmente para pagar a fatura.
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cartoes (
@@ -162,10 +168,10 @@ CREATE TABLE IF NOT EXISTS cartoes (
   updated_at      timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT cartoes_usuario_nome_key UNIQUE (usuario_id, nome),
   CONSTRAINT cartoes_dia_fechamento_chk CHECK (
-    dia_fechamento IS NULL OR (dia_fechamento BETWEEN 1 AND 28)
+    dia_fechamento IS NULL OR (dia_fechamento BETWEEN 1 AND 31)
   ),
   CONSTRAINT cartoes_dia_vencimento_chk CHECK (
-    dia_vencimento IS NULL OR (dia_vencimento BETWEEN 1 AND 28)
+    dia_vencimento IS NULL OR (dia_vencimento BETWEEN 1 AND 31)
   )
 );
 
@@ -266,6 +272,8 @@ CREATE TABLE IF NOT EXISTS beneficiarios (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   usuario_id  uuid NOT NULL REFERENCES usuarios (id),
   nome        text NOT NULL,
+  tipo        text,
+  observacao  text,
   ativo       boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
@@ -273,6 +281,9 @@ CREATE TABLE IF NOT EXISTS beneficiarios (
 );
 
 COMMENT ON TABLE beneficiarios IS 'Pessoas ou estabelecimentos envolvidos nas movimentações.';
+COMMENT ON COLUMN beneficiarios.tipo IS
+  'Classificação do beneficiário. Exemplos: PESSOA, EMPRESA, GOVERNO, OUTROS.';
+COMMENT ON COLUMN beneficiarios.observacao IS 'Notas livres sobre o beneficiário.';
 
 CREATE INDEX IF NOT EXISTS idx_beneficiarios_usuario_id ON beneficiarios (usuario_id);
 
