@@ -1,0 +1,3 @@
+-- Placeholder: schema v1
+-- Do not generate CREATE TABLE / indexes here yet.
+-- Wait for the finalized database scripts.

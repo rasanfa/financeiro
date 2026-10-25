@@ -1,0 +1,3 @@
+-- Placeholder: views v1
+-- Reporting / derived views will go here after the schema is finalized.
+-- Wait for the finalized database scripts.

@@ -1,0 +1,3 @@
+-- Placeholder: business rules v1
+-- Constraints, functions, and triggers will go here after the schema is finalized.
+-- Wait for the finalized database scripts.
