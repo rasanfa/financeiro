@@ -29,20 +29,48 @@ def run_app() -> None:
         icon="📊",
         default=True,
     )
-    categorias = st.Page(
-        "src/views/categorias.py",
-        title="Categorias",
-        icon="🏷️",
+    instituicoes = st.Page(
+        "src/views/instituicoes.py",
+        title="Instituições",
+        icon="🏛️",
     )
     contas = st.Page(
         "src/views/contas.py",
         title="Contas",
         icon="🏦",
     )
+    cartoes = st.Page(
+        "src/views/cartoes.py",
+        title="Cartões",
+        icon="💳",
+    )
+    categorias = st.Page(
+        "src/views/categorias.py",
+        title="Categorias",
+        icon="🏷️",
+    )
+    beneficiarios = st.Page(
+        "src/views/beneficiarios.py",
+        title="Beneficiários",
+        icon="👤",
+    )
+    movimentacoes = st.Page(
+        "src/views/movimentacoes.py",
+        title="Movimentações",
+        icon="📒",
+    )
 
     navigator = st.navigation(
         {
-            "Menu": [dashboard, categorias, contas],
+            "Início": [dashboard],
+            "Cadastros": [
+                instituicoes,
+                contas,
+                cartoes,
+                categorias,
+                beneficiarios,
+            ],
+            "Lançamentos": [movimentacoes],
         }
     )
     _render_sidebar_status()
