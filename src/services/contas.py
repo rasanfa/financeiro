@@ -53,3 +53,33 @@ class ContasService(BaseService):
                 "ativo": True
             }
         )
+
+    def atualizar(
+        self,
+        conta_id: str,
+        instituicao_id: str,
+        nome: str,
+        apelido: str,
+        tipo_conta: str,
+        saldo_inicial: float
+    ):
+
+        self.repository.atualizar(
+            conta_id,
+            {
+                "instituicao_id": instituicao_id,
+                "nome": nome,
+                "apelido": apelido,
+                "tipo_conta": tipo_conta,
+                "saldo_inicial": saldo_inicial
+            }
+        )
+
+    def inativar(
+        self,
+        conta_id: str
+    ):
+
+        self.repository.inativar(
+            conta_id
+        )

@@ -11,11 +11,10 @@ service = InstituicoesService()
 if "instituicao_edicao" not in st.session_state:
     st.session_state.instituicao_edicao = None
 
-st.title("🏦 Instituições")
-st.caption("Bancos, corretoras e carteiras digitais")
+if "mostrar_form_instituicao" not in st.session_state:
+    st.session_state.mostrar_form_instituicao = False
 
-if st.button("🔄 Atualizar"):
-    st.rerun()
+st.title("🏦 Instituições")
 
 try:
 
@@ -26,176 +25,124 @@ try:
         len(instituicoes)
     )
 
+    if st.button("➕ Nova Instituição"):
+        st.session_state.mostrar_form_instituicao = True
+
+    if st.session_state.mostrar_form_instituicao:
+
+        with st.expander(
+            "Nova Instituição",
+            expanded=True
+        ):
+
+            with st.form("instituicao_form"):
+
+                nome = st.text_input("Nome")
+
+                tipos = [
+                    "BANCO",
+                    "CORRETORA",
+                    "CARTEIRA_DIGITAL"
+                ]
+
+                tipo = st.selectbox(
+                    "Tipo",
+                    tipos
+                )
+
+                salvar = st.form_submit_button(
+                    "Salvar"
+                )
+
+                if salvar:
+
+                    service.criar(
+                        usuario_id=USUARIO_ID,
+                        nome=nome,
+                        tipo=tipo
+                    )
+
+                    st.session_state.mostrar_form_instituicao = False
+
+                    st.rerun()
+
     st.divider()
 
-    st.subheader("Nova Instituição")
+    h1, h2, h3 = st.columns(
+        [6, 3, 1]
+    )
 
-    with st.form("instituicao_form"):
+    h1.markdown("**Nome**")
+    h2.markdown("**Tipo**")
+    h3.markdown("**Ações**")
 
-        nome = st.text_input("Nome")
+    for item in instituicoes:
 
-        tipo = st.selectbox(
-            "Tipo",
-            [
-                "BANCO",
-                "CORRETORA",
-                "CARTEIRA_DIGITAL"
-            ]
+        c1, c2, c3 = st.columns(
+            [6, 3, 1]
         )
 
-        salvar = st.form_submit_button("💾 Salvar")
+        c1.write(item["nome"])
 
-        if salvar:
+        c2.write(item["tipo"])
 
-            try:
+        if c3.button(
+            "✏️",
+            key=f"editar_{item['id']}"
+        ):
 
-                service.criar(
-                    usuario_id=USUARIO_ID,
-                    nome=nome,
-                    tipo=tipo
-                )
+            st.session_state.instituicao_edicao = item
 
-                st.success(
-                    "Instituição cadastrada com sucesso."
-                )
-
-                st.rerun()
-
-            except Exception as exc:
-
-                st.error(
-                    f"Erro ao salvar: {exc}"
-                )
-
-    # ==========================
-    # EDIÇÃO
-    # ==========================
+            st.rerun()
 
     if st.session_state.instituicao_edicao:
 
-        instituicao = st.session_state.instituicao_edicao
+        item = st.session_state.instituicao_edicao
 
         st.divider()
 
-        st.subheader("Editar Instituição")
+        st.subheader(
+            f"Editar {item['nome']}"
+        )
 
-        with st.form("editar_instituicao"):
+        tipos = [
+            "BANCO",
+            "CORRETORA",
+            "CARTEIRA_DIGITAL"
+        ]
+
+        with st.form(
+            "editar_instituicao"
+        ):
 
             editar_nome = st.text_input(
                 "Nome",
-                value=instituicao["nome"]
+                value=item["nome"]
             )
-
-            tipos = [
-                "BANCO",
-                "CORRETORA",
-                "CARTEIRA_DIGITAL"
-            ]
 
             editar_tipo = st.selectbox(
                 "Tipo",
                 tipos,
                 index=tipos.index(
-                    instituicao["tipo"]
+                    item["tipo"]
                 )
             )
 
-            salvar_edicao = st.form_submit_button(
+            salvar = st.form_submit_button(
                 "Salvar Alterações"
             )
 
-            if salvar_edicao:
+            if salvar:
 
-                try:
-
-                    service.atualizar(
-                        instituicao["id"],
-                        editar_nome,
-                        editar_tipo
-                    )
-
-                    st.session_state.instituicao_edicao = None
-
-                    st.success(
-                        "Instituição atualizada."
-                    )
-
-                    st.rerun()
-
-                except Exception as exc:
-
-                    st.error(
-                        f"Erro: {exc}"
-                    )
-
-    # ==========================
-    # LISTAGEM
-    # ==========================
-
-    st.divider()
-
-    st.subheader(
-        "Instituições Cadastradas"
-    )
-
-    if not instituicoes:
-
-        st.info(
-            "Nenhuma instituição cadastrada."
-        )
-
-    else:
-
-        for item in instituicoes:
-
-            col1, col2, col3, col4, col5 = st.columns(
-                [4, 3, 2, 2, 2]
-            )
-
-            with col1:
-                st.write(
-                    f"**{item['nome']}**"
+                service.atualizar(
+                    item["id"],
+                    editar_nome,
+                    editar_tipo
                 )
 
-            with col2:
-                st.write(
-                    item["tipo"]
-                )
+                st.session_state.instituicao_edicao = None
 
-            with col3:
-
-                if item.get("ativo", True):
-                    st.write("✅ Ativa")
-                else:
-                    st.write("❌ Inativa")
-
-            with col4:
-
-                if item.get("ativo", True):
-
-                    if st.button(
-                        "Inativar",
-                        key=f"inativar_{item['id']}"
-                    ):
-
-                        service.inativar(
-                            item["id"]
-                        )
-
-                        st.rerun()
-
-            with col5:
-
-                if st.button(
-                    "Editar",
-                    key=f"editar_{item['id']}"
-                ):
-
-                    st.session_state.instituicao_edicao = item
-
-                    st.rerun()
-
-            st.divider()
+                st.rerun()
 
 except Exception as exc:
 

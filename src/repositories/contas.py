@@ -39,3 +39,34 @@ class ContasRepository(BaseRepository):
         )
 
         return response.data[0]
+
+    def atualizar(
+        self,
+        conta_id: str,
+        dados: dict
+    ):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(dados)
+            .eq("id", conta_id)
+            .execute()
+        )
+
+    def inativar(
+        self,
+        conta_id: str
+    ):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(
+                {
+                    "ativo": False
+                }
+            )
+            .eq("id", conta_id)
+            .execute()
+        )

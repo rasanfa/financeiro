@@ -71,3 +71,12 @@ class InstituicoesService(BaseService):
                 "tipo": tipo
             }
         )
+
+    def reativar(
+        self,
+        instituicao_id: str
+    ):
+
+        self.repository.reativar(
+            instituicao_id
+        )

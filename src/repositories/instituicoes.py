@@ -53,3 +53,20 @@ class InstituicoesRepository(BaseRepository):
             .eq("id", instituicao_id)
             .execute()
         )
+
+    def reativar(
+        self,
+        instituicao_id: str
+    ):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(
+                {
+                    "ativo": True
+                }
+            )
+            .eq("id", instituicao_id)
+            .execute()
+        )
