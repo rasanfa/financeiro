@@ -75,3 +75,45 @@ class CategoriasService(BaseService):
         self.repository.inativar(
             categoria_id
         )
+        
+    def listar_subcategorias(self):
+
+        return self._subcategorias.listar()
+
+    def criar_subcategoria(
+        self,
+        categoria_id: str,
+        nome: str
+    ):
+
+        return self._subcategorias.criar(
+            {
+                "categoria_id": categoria_id,
+                "nome": nome,
+                "ativo": True
+            }
+        )
+
+    def atualizar_subcategoria(
+        self,
+        subcategoria_id: str,
+        categoria_id: str,
+        nome: str
+    ):
+
+        self._subcategorias.atualizar(
+            subcategoria_id,
+            {
+                "categoria_id": categoria_id,
+                "nome": nome
+            }
+        )
+
+    def inativar_subcategoria(
+        self,
+        subcategoria_id: str
+    ):
+
+        self._subcategorias.inativar(
+            subcategoria_id
+        )

@@ -52,6 +52,11 @@ def run_app() -> None:
         title="Categorias",
         icon="🏷️",
     )
+    subcategorias = st.Page(
+        "src/views/subcategorias.py",
+        title="Plano de Categorias",
+        icon="🗂️",
+    )
     beneficiarios = st.Page(
         "src/views/beneficiarios.py",
         title="Beneficiários",
@@ -71,6 +76,7 @@ def run_app() -> None:
                 contas,
                 cartoes,
                 categorias,
+                subcategorias,
                 beneficiarios,
             ],
             "Lançamentos": [movimentacoes],
