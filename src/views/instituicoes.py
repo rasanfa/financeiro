@@ -12,10 +12,10 @@ service = InstituicoesService()
 st.title("🏦 Instituições")
 st.caption("Bancos, corretoras e carteiras digitais")
 
-col1, col2 = st.columns([1, 5])
+with st.container():
 
-with col1:
-    st.button("🔄 Atualizar")
+    if st.button("🔄 Atualizar"):
+        st.rerun()
 
 try:
 
@@ -25,10 +25,6 @@ try:
         "Total de Instituições",
         len(instituicoes)
     )
-
-    # ==========================
-    # FORMULÁRIO DE CADASTRO
-    # ==========================
 
     st.divider()
 
@@ -75,13 +71,11 @@ try:
                     f"Erro ao salvar: {exc}"
                 )
 
-    # ==========================
-    # LISTAGEM
-    # ==========================
-
     st.divider()
 
-    st.subheader("Instituições Cadastradas")
+    st.subheader(
+        "Instituições Cadastradas"
+    )
 
     if not instituicoes:
 
@@ -91,46 +85,64 @@ try:
 
     else:
 
-        df = pd.DataFrame(instituicoes)
+        for item in instituicoes:
 
-        if "ativo" in df.columns:
-            df["status"] = df["ativo"].apply(
-                lambda x: "✅ Ativa" if x else "❌ Inativa"
+            col1, col2, col3, col4 = st.columns(
+                [4, 3, 2, 2]
             )
 
-        if "created_at" in df.columns:
-            df["criada_em"] = pd.to_datetime(
-                df["created_at"]
-            ).dt.strftime("%d/%m/%Y")
+            with col1:
+                st.write(
+                    f"**{item['nome']}**"
+                )
 
-        colunas_exibir = []
+            with col2:
+                st.write(
+                    item["tipo"]
+                )
 
-        if "nome" in df.columns:
-            colunas_exibir.append("nome")
+            with col3:
 
-        if "tipo" in df.columns:
-            colunas_exibir.append("tipo")
+                if item.get("ativo", True):
 
-        if "status" in df.columns:
-            colunas_exibir.append("status")
+                    st.write(
+                        "✅ Ativa"
+                    )
 
-        if "criada_em" in df.columns:
-            colunas_exibir.append("criada_em")
+                else:
 
-        df = df[colunas_exibir]
+                    st.write(
+                        "❌ Inativa"
+                    )
 
-        df.columns = [
-            "Nome",
-            "Tipo",
-            "Status",
-            "Criada em"
-        ][: len(df.columns)]
+            with col4:
 
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-        )
+                if item.get("ativo", True):
+
+                    if st.button(
+                        "Inativar",
+                        key=f"inativar_{item['id']}"
+                    ):
+
+                        try:
+
+                            service.inativar(
+                                item["id"]
+                            )
+
+                            st.success(
+                                "Instituição inativada."
+                            )
+
+                            st.rerun()
+
+                        except Exception as exc:
+
+                            st.error(
+                                f"Erro: {exc}"
+                            )
+
+            st.divider()
 
 except Exception as exc:
 

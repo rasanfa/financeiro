@@ -29,3 +29,17 @@ class InstituicoesRepository(BaseRepository):
         )
 
         return response.data[0]
+
+    def inativar(self, instituicao_id: str):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(
+                {
+                    "ativo": False
+                }
+            )
+            .eq("id", instituicao_id)
+            .execute()
+        )

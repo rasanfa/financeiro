@@ -40,3 +40,12 @@ class InstituicoesService(BaseService):
                 "ativo": True
             }
         )
+
+    def inativar(
+        self,
+        instituicao_id: str
+    ):
+
+        self.repository.inativar(
+            instituicao_id
+        )
