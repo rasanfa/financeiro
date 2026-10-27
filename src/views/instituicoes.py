@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pandas as pd
 import streamlit as st
 
 from src.services.instituicoes import InstituicoesService
@@ -9,13 +8,14 @@ USUARIO_ID = "17c95aaa-3ec6-4dc0-824b-7708fa280c5a"
 
 service = InstituicoesService()
 
+if "instituicao_edicao" not in st.session_state:
+    st.session_state.instituicao_edicao = None
+
 st.title("🏦 Instituições")
 st.caption("Bancos, corretoras e carteiras digitais")
 
-with st.container():
-
-    if st.button("🔄 Atualizar"):
-        st.rerun()
+if st.button("🔄 Atualizar"):
+    st.rerun()
 
 try:
 
@@ -32,9 +32,7 @@ try:
 
     with st.form("instituicao_form"):
 
-        nome = st.text_input(
-            "Nome"
-        )
+        nome = st.text_input("Nome")
 
         tipo = st.selectbox(
             "Tipo",
@@ -45,9 +43,7 @@ try:
             ]
         )
 
-        salvar = st.form_submit_button(
-            "💾 Salvar"
-        )
+        salvar = st.form_submit_button("💾 Salvar")
 
         if salvar:
 
@@ -71,6 +67,71 @@ try:
                     f"Erro ao salvar: {exc}"
                 )
 
+    # ==========================
+    # EDIÇÃO
+    # ==========================
+
+    if st.session_state.instituicao_edicao:
+
+        instituicao = st.session_state.instituicao_edicao
+
+        st.divider()
+
+        st.subheader("Editar Instituição")
+
+        with st.form("editar_instituicao"):
+
+            editar_nome = st.text_input(
+                "Nome",
+                value=instituicao["nome"]
+            )
+
+            tipos = [
+                "BANCO",
+                "CORRETORA",
+                "CARTEIRA_DIGITAL"
+            ]
+
+            editar_tipo = st.selectbox(
+                "Tipo",
+                tipos,
+                index=tipos.index(
+                    instituicao["tipo"]
+                )
+            )
+
+            salvar_edicao = st.form_submit_button(
+                "Salvar Alterações"
+            )
+
+            if salvar_edicao:
+
+                try:
+
+                    service.atualizar(
+                        instituicao["id"],
+                        editar_nome,
+                        editar_tipo
+                    )
+
+                    st.session_state.instituicao_edicao = None
+
+                    st.success(
+                        "Instituição atualizada."
+                    )
+
+                    st.rerun()
+
+                except Exception as exc:
+
+                    st.error(
+                        f"Erro: {exc}"
+                    )
+
+    # ==========================
+    # LISTAGEM
+    # ==========================
+
     st.divider()
 
     st.subheader(
@@ -87,8 +148,8 @@ try:
 
         for item in instituicoes:
 
-            col1, col2, col3, col4 = st.columns(
-                [4, 3, 2, 2]
+            col1, col2, col3, col4, col5 = st.columns(
+                [4, 3, 2, 2, 2]
             )
 
             with col1:
@@ -104,16 +165,9 @@ try:
             with col3:
 
                 if item.get("ativo", True):
-
-                    st.write(
-                        "✅ Ativa"
-                    )
-
+                    st.write("✅ Ativa")
                 else:
-
-                    st.write(
-                        "❌ Inativa"
-                    )
+                    st.write("❌ Inativa")
 
             with col4:
 
@@ -124,23 +178,22 @@ try:
                         key=f"inativar_{item['id']}"
                     ):
 
-                        try:
+                        service.inativar(
+                            item["id"]
+                        )
 
-                            service.inativar(
-                                item["id"]
-                            )
+                        st.rerun()
 
-                            st.success(
-                                "Instituição inativada."
-                            )
+            with col5:
 
-                            st.rerun()
+                if st.button(
+                    "Editar",
+                    key=f"editar_{item['id']}"
+                ):
 
-                        except Exception as exc:
+                    st.session_state.instituicao_edicao = item
 
-                            st.error(
-                                f"Erro: {exc}"
-                            )
+                    st.rerun()
 
             st.divider()
 

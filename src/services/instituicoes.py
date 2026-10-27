@@ -49,3 +49,25 @@ class InstituicoesService(BaseService):
         self.repository.inativar(
             instituicao_id
         )
+        
+    def atualizar(
+        self,
+        instituicao_id: str,
+        nome: str,
+        tipo: str
+    ):
+
+        nome = nome.strip()
+
+        if not nome:
+            raise ValueError(
+                "Nome da instituição é obrigatório."
+            )
+
+        self.repository.atualizar(
+            instituicao_id,
+            {
+                "nome": nome,
+                "tipo": tipo
+            }
+        )

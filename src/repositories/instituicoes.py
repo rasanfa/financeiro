@@ -43,3 +43,13 @@ class InstituicoesRepository(BaseRepository):
             .eq("id", instituicao_id)
             .execute()
         )
+
+    def atualizar(self, instituicao_id: str, dados: dict):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(dados)
+            .eq("id", instituicao_id)
+            .execute()
+        )
