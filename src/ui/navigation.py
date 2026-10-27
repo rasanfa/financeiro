@@ -3,6 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from src.config import get_settings
+from src.ui.theme import apply_theme
 
 
 def _render_sidebar_status() -> None:
@@ -22,6 +23,8 @@ def run_app() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    
+    apply_theme()
 
     dashboard = st.Page(
         "src/views/dashboard.py",

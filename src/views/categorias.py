@@ -3,6 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from src.services.categorias import CategoriasService
+from src.ui.components import render_total_card
 
 USUARIO_ID = "17c95aaa-3ec6-4dc0-824b-7708fa280c5a"
 
@@ -20,12 +21,12 @@ try:
 
     categorias = service.listar()
 
-    st.metric(
-        "Total de Categorias",
+    render_total_card(
+        "Categorias",
         len(categorias)
     )
 
-    if st.button("➕ Nova Categoria"):
+    if st.button("Nova Categoria"):
         st.session_state.mostrar_form_categoria = True
 
     if st.session_state.mostrar_form_categoria:
@@ -93,7 +94,7 @@ try:
         )
 
         if c3.button(
-            "✏️",
+            "Editar",
             key=f"editar_{categoria['id']}"
         ):
 

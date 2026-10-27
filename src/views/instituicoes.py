@@ -3,6 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from src.services.instituicoes import InstituicoesService
+from src.ui.components import render_total_card
 
 USUARIO_ID = "17c95aaa-3ec6-4dc0-824b-7708fa280c5a"
 
@@ -20,12 +21,12 @@ try:
 
     instituicoes = service.listar()
 
-    st.metric(
-        "Total de Instituições",
+    render_total_card(
+        "Instituições",
         len(instituicoes)
     )
 
-    if st.button("➕ Nova Instituição"):
+    if st.button("Nova Instituição"):
         st.session_state.mostrar_form_instituicao = True
 
     if st.session_state.mostrar_form_instituicao:
@@ -87,7 +88,7 @@ try:
         c2.write(item["tipo"])
 
         if c3.button(
-            "✏️",
+            "Editar",
             key=f"editar_{item['id']}"
         ):
 

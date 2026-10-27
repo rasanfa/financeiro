@@ -4,6 +4,7 @@ import streamlit as st
 
 from src.db.client import get_supabase_client
 from src.services.contas import ContasService
+from src.ui.components import render_total_card
 
 USUARIO_ID = "17c95aaa-3ec6-4dc0-824b-7708fa280c5a"
 
@@ -32,12 +33,12 @@ try:
 
     contas = service.listar()
 
-    st.metric(
-        "Total de Contas",
+    render_total_card(
+        "Contas",
         len(contas)
     )
 
-    if st.button("➕ Nova Conta"):
+    if st.button("Nova Conta"):
         st.session_state.mostrar_form_conta = True
 
     if st.session_state.mostrar_form_conta:
@@ -146,7 +147,7 @@ try:
         )
 
         if c6.button(
-            "✏️",
+            "Editar",
             key=f"editar_{conta['id']}"
         ):
 
