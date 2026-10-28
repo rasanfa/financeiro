@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from math import ceil
 
 import streamlit as st
 
@@ -466,13 +467,7 @@ st.title("📒 Movimentações")
 try:
 
     catalogos = service.listar_catalogos(USUARIO_ID)
-    movimentacoes = service.listar()
-
-    total_ativas = sum(
-        1
-        for movimentacao in movimentacoes
-        if movimentacao["status_movimentacao"] == "ATIVA"
-    )
+    total_ativas = service.contar_ativas()
 
     render_total_card(
         "Movimentações ativas",
@@ -485,6 +480,64 @@ try:
 
     if st.session_state.mostrar_form_movimentacao:
         _render_formulario(catalogos)
+
+    if "movimentacoes_itens_por_pagina" not in st.session_state:
+        st.session_state.movimentacoes_itens_por_pagina = 10
+    if "movimentacoes_pagina" not in st.session_state:
+        st.session_state.movimentacoes_pagina = 1
+    if "movimentacoes_itens_por_pagina_anterior" not in st.session_state:
+        st.session_state.movimentacoes_itens_por_pagina_anterior = 10
+
+    col_quantidade, col_pagina = st.columns(2)
+    with col_quantidade:
+        itens_por_pagina = st.selectbox(
+            "Itens por página",
+            [10, 20, 50, 100, 500, None],
+            format_func=lambda quantidade: (
+                "Tudo" if quantidade is None else str(quantidade)
+            ),
+            key="movimentacoes_itens_por_pagina"
+        )
+
+    if (
+        itens_por_pagina
+        != st.session_state.movimentacoes_itens_por_pagina_anterior
+    ):
+        st.session_state.movimentacoes_pagina = 1
+        st.session_state.movimentacoes_itens_por_pagina_anterior = (
+            itens_por_pagina
+        )
+
+    movimentacoes, total_movimentacoes = service.listar_paginado(
+        st.session_state.movimentacoes_pagina,
+        itens_por_pagina
+    )
+    total_paginas = (
+        ceil(total_movimentacoes / itens_por_pagina)
+        if itens_por_pagina is not None and total_movimentacoes
+        else 1
+    )
+
+    if st.session_state.movimentacoes_pagina > total_paginas:
+        st.session_state.movimentacoes_pagina = total_paginas
+        movimentacoes, total_movimentacoes = service.listar_paginado(
+            st.session_state.movimentacoes_pagina,
+            itens_por_pagina
+        )
+        total_paginas = (
+            ceil(total_movimentacoes / itens_por_pagina)
+            if itens_por_pagina is not None and total_movimentacoes
+            else 1
+        )
+
+    with col_pagina:
+        st.number_input(
+            f"Página (de {total_paginas})",
+            min_value=1,
+            max_value=total_paginas,
+            step=1,
+            key="movimentacoes_pagina"
+        )
 
     nomes_contas = {
         conta["id"]: (
@@ -526,6 +579,9 @@ try:
 
     for coluna, titulo in zip(colunas_titulo, titulos):
         coluna.markdown(f"**{titulo}**")
+
+    if not movimentacoes:
+        st.info("Nenhuma movimentação encontrada.")
 
     for movimentacao in movimentacoes:
 

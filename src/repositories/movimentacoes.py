@@ -20,6 +20,64 @@ class MovimentacoesRepository(BaseRepository):
 
         return response.data or []
 
+    def listar_paginado(
+        self,
+        pagina: int,
+        itens_por_pagina: int | None
+    ) -> tuple[list[dict], int]:
+
+        query = (
+            self.client
+            .table(self.table_name)
+            .select("*", count="exact")
+            .order("data", desc=True)
+            .order("created_at", desc=True)
+        )
+
+        if itens_por_pagina is not None:
+            inicio = (pagina - 1) * itens_por_pagina
+            query = query.range(inicio, inicio + itens_por_pagina - 1)
+            response = query.execute()
+
+            return response.data or [], response.count or 0
+
+        resposta = query.range(0, 499).execute()
+        movimentacoes = resposta.data or []
+        total = resposta.count or 0
+
+        while len(movimentacoes) < total:
+            inicio = len(movimentacoes)
+            resposta = (
+                self.client
+                .table(self.table_name)
+                .select("*")
+                .order("data", desc=True)
+                .order("created_at", desc=True)
+                .range(inicio, inicio + 499)
+                .execute()
+            )
+            pagina_atual = resposta.data or []
+
+            if not pagina_atual:
+                break
+
+            movimentacoes.extend(pagina_atual)
+
+        return movimentacoes, total
+
+    def contar_ativas(self) -> int:
+
+        response = (
+            self.client
+            .table(self.table_name)
+            .select("id", count="exact")
+            .eq("status_movimentacao", "ATIVA")
+            .limit(1)
+            .execute()
+        )
+
+        return response.count or 0
+
     def buscar(self, movimentacao_id: str) -> dict | None:
 
         response = (

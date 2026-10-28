@@ -41,6 +41,33 @@ class MovimentacoesService(BaseService):
 
         return self._movimentacoes_repository.listar()
 
+    def listar_paginado(
+        self,
+        pagina: int,
+        itens_por_pagina: int | None
+    ) -> tuple[list[dict], int]:
+
+        if pagina < 1:
+            raise ValueError("A página deve ser maior que zero.")
+
+        if itens_por_pagina is not None and itens_por_pagina not in (
+            10,
+            20,
+            50,
+            100,
+            500
+        ):
+            raise ValueError("Quantidade de itens por página inválida.")
+
+        return self._movimentacoes_repository.listar_paginado(
+            pagina,
+            itens_por_pagina
+        )
+
+    def contar_ativas(self) -> int:
+
+        return self._movimentacoes_repository.contar_ativas()
+
     def listar_catalogos(
         self,
         usuario_id: str
