@@ -354,24 +354,27 @@ def _render_formulario(
                 )
             )
 
-        beneficiario_id = st.selectbox(
-            "Beneficiário (opcional)",
-            [None, *nomes_beneficiarios],
-            index=(
-                [None, *nomes_beneficiarios].index(
-                    movimentacao["beneficiario_id"]
+        if tipo_movimento == "RECEITA":
+            beneficiario_id = None
+        else:
+            beneficiario_id = st.selectbox(
+                "Beneficiário (opcional)",
+                [None, *nomes_beneficiarios],
+                index=(
+                    [None, *nomes_beneficiarios].index(
+                        movimentacao["beneficiario_id"]
+                    )
+                    if editando
+                    and movimentacao.get("beneficiario_id")
+                    in nomes_beneficiarios
+                    else 0
+                ),
+                format_func=lambda valor: _rotulo_opcao(
+                    valor,
+                    nomes_beneficiarios,
+                    "Não informado"
                 )
-                if editando
-                and movimentacao.get("beneficiario_id")
-                in nomes_beneficiarios
-                else 0
-            ),
-            format_func=lambda valor: _rotulo_opcao(
-                valor,
-                nomes_beneficiarios,
-                "Não informado"
             )
-        )
 
         total_parcelas = 1
 

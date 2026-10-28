@@ -349,13 +349,31 @@ class MovimentacoesService(BaseService):
             for categoria in categorias
         }
 
-        if tipo_movimento in ("RECEITA", "DESPESA_AVISTA"):
+        if tipo_movimento == "RECEITA":
+            if beneficiario_id is not None:
+                raise ValueError(
+                    "Receitas não podem ser vinculadas a beneficiário."
+                )
+
             self._exigir_referencia(
                 conta_id,
                 ids_contas,
                 "Selecione uma conta ativa."
             )
 
+        elif tipo_movimento == "DESPESA_AVISTA":
+            if conta_id is None and beneficiario_id is None:
+                raise ValueError(
+                    "Selecione uma conta ou um beneficiário."
+                )
+            if conta_id is not None:
+                self._exigir_referencia(
+                    conta_id,
+                    ids_contas,
+                    "Selecione uma conta ativa."
+                )
+
+        if tipo_movimento in ("RECEITA", "DESPESA_AVISTA"):
             if cartao_id is not None:
                 raise ValueError(
                     "Receitas e despesas à vista não podem usar cartão."
@@ -402,9 +420,16 @@ class MovimentacoesService(BaseService):
 
         exige_categoria = tipo_movimento in TIPOS_COM_CATEGORIA
 
-        if exige_categoria and categoria_id is None:
+        if (
+            exige_categoria
+            and categoria_id is None
+            and not (
+                tipo_movimento == "DESPESA_AVISTA"
+                and beneficiario_id is not None
+            )
+        ):
             raise ValueError(
-                "Categoria é obrigatória para receitas e despesas."
+                "Categoria é obrigatória, exceto em despesas à vista com beneficiário."
             )
 
         if categoria_id is None and subcategoria_id is not None:

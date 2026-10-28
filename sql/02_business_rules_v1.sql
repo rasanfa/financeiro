@@ -7,11 +7,11 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1) Receita exige conta
+-- 1) Receita exige conta e não pode ser vinculada a beneficiário
 -- 2) Receita não pode usar cartão
 -- 3) Despesa parcelada exige cartão
 --    (1x no crédito também usa DESPESA_PARCELADA com total_parcelas = 1)
--- 4) Despesa à vista exige conta
+-- 4) Despesa à vista exige conta, exceto quando vinculada a um beneficiário externo
 -- 5) Parcelamento válido
 -- 6) Data >= 2020-01-01
 --
@@ -28,6 +28,7 @@ ALTER TABLE movimentacoes
   DROP CONSTRAINT IF EXISTS movimentacoes_parcelamento_chk,
   DROP CONSTRAINT IF EXISTS movimentacoes_receita_conta_chk,
   DROP CONSTRAINT IF EXISTS movimentacoes_receita_sem_cartao_chk,
+  DROP CONSTRAINT IF EXISTS movimentacoes_receita_sem_beneficiario_chk,
   DROP CONSTRAINT IF EXISTS movimentacoes_despesa_parcelada_cartao_chk,
   DROP CONSTRAINT IF EXISTS movimentacoes_despesa_avista_conta_chk,
   DROP CONSTRAINT IF EXISTS movimentacoes_transferencia_chk,
@@ -67,6 +68,11 @@ ALTER TABLE movimentacoes
       tipo_movimento <> 'RECEITA'
       OR cartao_id IS NULL
     ),
+  ADD CONSTRAINT movimentacoes_receita_sem_beneficiario_chk
+    CHECK (
+      tipo_movimento <> 'RECEITA'
+      OR beneficiario_id IS NULL
+    ),
   ADD CONSTRAINT movimentacoes_despesa_parcelada_cartao_chk
     CHECK (
       tipo_movimento <> 'DESPESA_PARCELADA'
@@ -76,6 +82,7 @@ ALTER TABLE movimentacoes
     CHECK (
       tipo_movimento <> 'DESPESA_AVISTA'
       OR conta_id IS NOT NULL
+      OR beneficiario_id IS NOT NULL
     ),
   ADD CONSTRAINT movimentacoes_transferencia_chk
     CHECK (
@@ -133,7 +140,8 @@ EXECUTE FUNCTION normalizar_competencia();
 
 -- -----------------------------------------------------------------------------
 -- 7) Trigger valida categoria / subcategoria
---    - RECEITA, DESPESA_AVISTA e DESPESA_PARCELADA exigem categoria ativa
+--    - RECEITA e despesas parceladas exigem categoria ativa
+--    - DESPESA_AVISTA com beneficiário pode omitir categoria
 --    - tipo da categoria deve ser compatível (RECEITA, DESPESA ou AMBOS)
 --    - subcategoria, se informada, deve existir, estar ativa e pertencer à categoria
 --    - transferência/folha podem omitir categoria; se informada, ainda valida vínculo
@@ -156,7 +164,11 @@ BEGIN
   );
 
   IF NEW.categoria_id IS NULL THEN
-    IF v_exige_categoria THEN
+    IF v_exige_categoria
+       AND NOT (
+         NEW.tipo_movimento = 'DESPESA_AVISTA'
+         AND NEW.beneficiario_id IS NOT NULL
+       ) THEN
       RAISE EXCEPTION
         'Categoria é obrigatória para movimentações do tipo %',
         NEW.tipo_movimento
