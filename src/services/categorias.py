@@ -4,7 +4,6 @@ from src.repositories.categorias import (
     CategoriasRepository,
     SubcategoriasRepository,
 )
-
 from src.services.base import BaseService
 
 
