@@ -1,7 +1,151 @@
+from __future__ import annotations
+
 from src.repositories.base import BaseRepository
 
 
 class MovimentacoesRepository(BaseRepository):
-    """Tabela movimentacoes. CRUD será implementado depois."""
 
     table_name = "movimentacoes"
+
+    def listar(self) -> list[dict]:
+
+        response = (
+            self.client
+            .table(self.table_name)
+            .select("*")
+            .order("data", desc=True)
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+        return response.data or []
+
+    def buscar(self, movimentacao_id: str) -> dict | None:
+
+        response = (
+            self.client
+            .table(self.table_name)
+            .select("*")
+            .eq("id", movimentacao_id)
+            .maybe_single()
+            .execute()
+        )
+
+        return response.data
+
+    def criar(
+        self,
+        dados: list[dict]
+    ) -> list[dict]:
+
+        response = (
+            self.client
+            .table(self.table_name)
+            .insert(dados)
+            .execute()
+        )
+
+        return response.data or []
+
+    def atualizar(
+        self,
+        movimentacao_id: str,
+        dados: dict
+    ):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(dados)
+            .eq("id", movimentacao_id)
+            .execute()
+        )
+
+    def cancelar(
+        self,
+        movimentacao_id: str
+    ):
+
+        (
+            self.client
+            .table(self.table_name)
+            .update(
+                {
+                    "status_movimentacao": "CANCELADA"
+                }
+            )
+            .eq("id", movimentacao_id)
+            .execute()
+        )
+
+    def listar_catalogos(
+        self,
+        usuario_id: str
+    ) -> dict[str, list[dict]]:
+
+        contas = (
+            self.client
+            .table("contas")
+            .select("id,nome,apelido,ativo,usuario_id")
+            .eq("usuario_id", usuario_id)
+            .eq("ativo", True)
+            .order("apelido")
+            .execute()
+        )
+
+        cartoes = (
+            self.client
+            .table("cartoes")
+            .select("id,nome,ativo,usuario_id")
+            .eq("usuario_id", usuario_id)
+            .eq("ativo", True)
+            .order("nome")
+            .execute()
+        )
+
+        categorias = (
+            self.client
+            .table("categorias")
+            .select("id,nome,tipo_categoria,ativo,usuario_id")
+            .eq("usuario_id", usuario_id)
+            .eq("ativo", True)
+            .order("nome")
+            .execute()
+        )
+
+        subcategorias = (
+            self.client
+            .table("subcategorias")
+            .select("id,nome,categoria_id,ativo")
+            .eq("ativo", True)
+            .order("nome")
+            .execute()
+        )
+
+        beneficiarios = (
+            self.client
+            .table("beneficiarios")
+            .select("id,nome,ativo,usuario_id")
+            .eq("usuario_id", usuario_id)
+            .eq("ativo", True)
+            .order("nome")
+            .execute()
+        )
+
+        formas_pagamento = (
+            self.client
+            .table("formas_pagamento")
+            .select("id,codigo,nome,ativo")
+            .eq("ativo", True)
+            .order("nome")
+            .execute()
+        )
+
+        return {
+            "contas": contas.data or [],
+            "cartoes": cartoes.data or [],
+            "categorias": categorias.data or [],
+            "subcategorias": subcategorias.data or [],
+            "beneficiarios": beneficiarios.data or [],
+            "formas_pagamento": formas_pagamento.data or []
+        }
